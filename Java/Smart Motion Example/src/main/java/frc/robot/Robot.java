@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
@@ -50,8 +51,10 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
  * effect of the GUI layout.
  */
 public class Robot extends TimedRobot {
-  private static final int deviceID = 1;
-  private CANSparkMax m_motor;
+  private static final int leaderDeviceID = 18;
+  private static final int followerDeviceID = 17;
+  private CANSparkMax m_leaderMotor;
+  private CANSparkMax m_followerMotor;
   private SparkPIDController m_pidController;
   private RelativeEncoder m_encoder;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
@@ -59,18 +62,28 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     // initialize motor
-    m_motor = new CANSparkMax(deviceID, MotorType.kBrushless);
+    m_leaderMotor = new CANSparkMax(leaderDeviceID, MotorType.kBrushless);
+    m_followerMotor = new CANSparkMax(followerDeviceID, MotorType.kBrushless);
+
+    m_leaderMotor.restoreFactoryDefaults();
+    m_followerMotor.restoreFactoryDefaults();
+
+    m_followerMotor.setSmartCurrentLimit(40);
+    m_leaderMotor.setSmartCurrentLimit(40);
+
+    m_leaderMotor.setInverted(false);
+    m_followerMotor.follow(m_leaderMotor,true);
+    m_leaderMotor.setIdleMode(IdleMode.kBrake);
 
     /**
      * The RestoreFactoryDefaults method can be used to reset the configuration parameters
      * in the SPARK MAX to their factory default state. If no argument is passed, these
      * parameters will not persist between power cycles
      */
-    m_motor.restoreFactoryDefaults();
 
     // initialze PID controller and encoder objects
-    m_pidController = m_motor.getPIDController();
-    m_encoder = m_motor.getEncoder();
+    m_pidController = m_leaderMotor.getPIDController();
+    m_encoder = m_leaderMotor.getEncoder();
 
     // PID coefficients
     kP = 5e-5; 
@@ -182,6 +195,6 @@ public class Robot extends TimedRobot {
     
     SmartDashboard.putNumber("SetPoint", setPoint);
     SmartDashboard.putNumber("Process Variable", processVariable);
-    SmartDashboard.putNumber("Output", m_motor.getAppliedOutput());
+    SmartDashboard.putNumber("Output", m_leaderMotor.getAppliedOutput());
   }
 }
