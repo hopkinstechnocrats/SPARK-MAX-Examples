@@ -22,18 +22,25 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
  */
 public class Robot extends TimedRobot {
   private Joystick m_stick;
-  private static final int deviceID = 1;
+  private static final int deviceID = 28;
   private CANSparkMax m_motor;
   private SparkPIDController m_pidController;
   private RelativeEncoder m_encoder;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM;
 
+  private static final int deviceID2 = 27;
+  private CANSparkMax m_motor2;
+  private Joystick m_stick2;
+  private SparkPIDController m_pidController2;
+
   @Override
   public void robotInit() {
     m_stick = new Joystick(0);
+    m_stick2 = new Joystick(1);
 
     // initialize motor
     m_motor = new CANSparkMax(deviceID, MotorType.kBrushless);
+    m_motor2 = new CANSparkMax(deviceID2, MotorType.kBrushless);
 
     /**
      * The RestoreFactoryDefaults method can be used to reset the configuration parameters
@@ -41,6 +48,7 @@ public class Robot extends TimedRobot {
      * parameters will not persist between power cycles
      */
     m_motor.restoreFactoryDefaults();
+    m_motor2.restoreFactoryDefaults();
 
     /**
      * In order to use PID functionality for a controller, a SparkPIDController object
@@ -69,6 +77,13 @@ public class Robot extends TimedRobot {
     m_pidController.setIZone(kIz);
     m_pidController.setFF(kFF);
     m_pidController.setOutputRange(kMinOutput, kMaxOutput);
+
+    m_pidController2.setP(kP);
+    m_pidController2.setI(kI);
+    m_pidController2.setD(kD);
+    m_pidController2.setIZone(kIz);
+    m_pidController2.setFF(kFF);
+    m_pidController2.setOutputRange(kMinOutput, kMaxOutput);
 
     // display PID coefficients on SmartDashboard
     SmartDashboard.putNumber("P Gain", kP);
@@ -117,8 +132,12 @@ public class Robot extends TimedRobot {
      *  com.revrobotics.CANSparkMax.ControlType.kVoltage
      */
     double setPoint = m_stick.getY()*maxRPM;
+    double setPoint2 = m_stick2.getY()*maxRPM;
+
     m_pidController.setReference(setPoint, CANSparkMax.ControlType.kVelocity);
+    m_pidController2.setReference(setPoint2, CANSparkMax.ControlType.kVelocity);
     
+
     SmartDashboard.putNumber("SetPoint", setPoint);
     SmartDashboard.putNumber("ProcessVariable", m_encoder.getVelocity());
   }
